@@ -1,47 +1,79 @@
-Options:  variable
-
-Options may occupy space at the end of the TCP header and are a multiple of 8 bits in length.  All options are included in the checksum.  An option may begin on any octet boundary.  There are two cases for the format of an option:
-Case 1:  A single octet of option-kind.
-Case 2:  An octet of option-kind, an octet of option-length, and the actual option-data octets.
-The option-length counts the two octets of option-kind and option-length as well as the option-data octets.
-Note that the list of options may be shorter than the data offset field might imply.  The content of the header beyond the End-of-Option option must be header padding (i.e., zero).
-A TCP must implement all options.
-Currently defined options include (kind indicated in octal):
-
-      Kind     Length    Meaning
-      ----     ------    -------
-       0         -       End of option list.
-       1         -       No-Operation.
-       2         4       Maximum Segment Size.
-      
-
-Specific Option Definitions
-
-End of Option List
-
-        +--------+
-        |00000000|
-        +--------+
-         Kind=0
-
-This option code indicates the end of the option list.  This might not coincide with the end of the TCP header according to the Data Offset field.  This is used at the end of all options, not the end of each option, and need only be used if the end of the options would not otherwise coincide with the end of the TCP header.
-
-No-Operation
-
-        +--------+
-        |00000001|
-        +--------+
-         Kind=1
-
-This option code may be used between options, for example, to align the beginning of a subsequent option on a word boundary. There is no guarantee that senders will use this option, so receivers must be prepared to process options even if they do not begin on a word boundary.
-
-Maximum Segment Size
-
-        +--------+--------+---------+--------+
-        |00000010|00000100|   max seg size   |
-        +--------+--------+---------+--------+
-         Kind=2   Length=4
-
-Maximum Segment Size Option Data:  16 bits.
-If this option is present, then it communicates the maximum receive segment size at the TCP which sends this segment.
-This field must only be sent in the initial connection request (i.e., in segments with the SYN control bit set).  If this option is not used, any segment size is allowed.
+#!/bin/bash
+ 
+fichier="/root/listusers.txt"
+sep=";"
+recommencer=1
+ 
+function adduser(){
+    while [ $recommencer -eq 1 ]; do
+        read -p "Entrez votre utilisteur comme suit : user,pass,groupe : " user 
+        nom=$(echo $user | cut -d$sep -f1)
+        recommencer=0
+        while read line
+        do
+            verifnom=$(echo $line | cut -d$sep -f1)
+            echo "Nom à vérifier : $verifnom"
+            echo "Nom passé en paramètre : $nom"
+            if [ "$verifnom" = "$nom" ]
+            then
+                recommencer=1
+                echo "Erreur l'user est déjà dans la liste !"
+                break
+            fi
+        done < $fichier
+        if [ $recommencer -eq 0 ]; then
+            echo "$user" >> $fichier
+        fi
+    done
+}
+ 
+function creerusers (){
+    while read line
+    do
+        name=$(echo $line | cut -d$sep -f1)
+        pass=$(echo $line | cut -d$sep -f2)
+        group=$(echo $line | cut -d$sep -f3)
+        sudo groupadd $group
+        sudo useradd $name -p "$pass" -g "$group"
+        id $name
+    done < $fichier
+}
+ 
+function aide (){
+    echo "Texte d'aide ici..."
+}
+ 
+if [ $# -ne 0 ]; then
+    if [ -e "$fichier" ]; then
+        while getopts "s:f:ac" options
+        do
+            case $options in
+                s)
+                    sep=$OPTARG;;
+                f)
+                    echo "Test"
+                    echo $OPTARG
+                    if [ -f $OPTARG ]; then
+                        fichier=$OPTARG
+                    else
+                        echo "Le fichier spécifié n'existe pas !"
+                        exit -1
+                    fi;;
+                a)
+                    adduser;;
+                c)
+                    creerusers;;
+                *)
+                    echo "Option $* inconnue !"
+            esac
+        done
+        exit 0
+    else
+        echo "Le fichier des users n'existe pas !"
+        exit -1
+    fi
+else
+    echo "Veuillez entrer au moins un argument !"
+    aide
+    exit -1
+fi

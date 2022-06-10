@@ -5,11 +5,11 @@ if(isset($_POST["lienSubmit"])) {
 
     switch ($_POST['algo']) {
         case 'textblob':
-            $commande = '"C:/Program Files/Python310/python.exe" c:/xampp/htdocs/SentimentAnalysis/python/methode_text_blob.py -l "'.$a_link.'"';
+            $commande = 'python python/methode_text_blob.py -l "'.$a_link.'"';
             break;
 
         case 'classique':
-            $commande = '"C:/Program Files/Python310/python.exe" c:/xampp/htdocs/SentimentAnalysis/python/methode_classique.py -l "'.$a_link.'"';
+            $commande = 'python python/methode_classique.py -l "'.$a_link.'"';
             break;
         
         default:
@@ -22,11 +22,11 @@ if(isset($_POST["lienSubmit"])) {
 elseif (isset($_POST["fileSubmit"])) {
     switch ($_POST['algo']) {
         case 'textblob':
-            $commande = '"C:/Program Files/Python310/python.exe" c:/xampp/htdocs/SentimentAnalysis/python/methode_text_blob.py -f';
+            $commande = 'python python/methode_text_blob.py -f';
             break;
 
         case 'classique':
-            $commande = '"C:/Program Files/Python310/python.exe" c:/xampp/htdocs/SentimentAnalysis/python/methode_classique.py -f';
+            $commande = 'python python/methode_classique.py -f';
             break;
         
         default:
@@ -47,7 +47,7 @@ elseif (isset($_POST["fileSubmit"])) {
             }
 
             if(move_uploaded_file($fileTmp, $chemin)) {
-                $output = shell_exec('"C:/Program Files/Python310/python.exe" c:/xampp/htdocs/SentimentAnalysis/python/methode_text_blob.py -f');
+                $output = shell_exec($commande);
                 
                 // print "$output <br>";
                 $output = (float)substr($output, 0, -1);
